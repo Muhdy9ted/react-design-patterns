@@ -1,41 +1,88 @@
-import CurrentUserLoader from "./containerComponentPattern/CurrentUserLoader";
-import { UserInfo } from "./containerComponentPattern/UserInfo";
-import UserLoader from "./containerComponentPattern/UserLoader";
-import ResourceLoader from "./containerComponentPattern/ResourceLoader";
-import DataSource from "./containerComponentPattern/DataSource";
-import axios from 'axios';
+import React, {useState, useEffect} from 'react'
+import UncontrolledForm from "./controlledUncontrolledPattern/UncontrolledForm";
+import ControlledForm from "./controlledUncontrolledPattern/ControlledForm";
+import UncontrolledModal from "./controlledUncontrolledPattern/UncontrolledModal";
+import ControlledModal from './controlledUncontrolledPattern/ControlledModal';
+import UncontrolledOnboardingFlow from './controlledUncontrolledPattern/UncontrolledOnboardingFlow';
+import ControlledOnboardingFlow from './controlledUncontrolledPattern/ControlledOnboardingFlow';
 
-const getServerData = async(url) => {
-    const response = await axios.get(url);
-    return response.data;
-}
+const StepOne = ({nextStep}) => {
+    return(
+        <>
+            <h1>Step 1</h1>
+            <button onClick={() => nextStep({name: 'john doe'})}>Next</button>
+        </>
+    )
+};
 
-// const getLocalStorageData = (key) => {
-//     return JSON.parse(localStorage.getItem(key));
-// }
+const StepTwo = ({nextStep}) => (
+    <>
+        <h1>Step 2</h1>
+        <button onClick={() => nextStep({age: 100})}>Next</button>
+    </>
+);
+
+const StepThree = ({nextStep}) => (
+    <>
+        <h1>Step 3</h1>
+        <p>Congratulations you qualify for our senior discount</p>
+        <button onClick={() => nextStep({})}>Next</button>
+    </> 
+);
+
+const StepFour = ({nextStep}) => (
+    <>
+        <h1>Step 4</h1>
+        <button onClick={() => nextStep({hairColor: 'brown'})}>Next</button>
+    </>
+);
+
 
 function App() {
+    const [showModal, setShowModal] = useState(false);
+    const [step, setStep] = useState(0);
+    const [onboardingData, setOnboardingData] = useState({});
+
+    const nextStep = (stepData) => {
+        setOnboardingData({...stepData, ...onboardingData});
+        setStep(step + 1);
+    }
+
+    useEffect(() =>{
+        console.log(onboardingData)
+    }, [onboardingData])
+
 	return (
         <>
-            <CurrentUserLoader>
-                <UserInfo />
-            </CurrentUserLoader>
-
-            <UserLoader userId="780">
-                <UserInfo />
-            </UserLoader>
-
-            <UserLoader userId="124">
-                <UserInfo />
-            </UserLoader>
-            <ResourceLoader resourceUrl="/users/987" resourceName="user">
-                <UserInfo />
-            </ResourceLoader>
-
-            <DataSource getDataFunc={() => getServerData('/users/124')} resourceName="user">
-                <UserInfo />
-            </DataSource>
+            <UncontrolledForm />
+            <ControlledForm />
+            <UncontrolledModal />
+            <ControlledModal isOpen={showModal} onClose={() => setShowModal(false)}><h1>Hello World</h1></ControlledModal>
+            <button onClick={() => setShowModal(!showModal)}>Open Controlled Modal</button>
+            <br/>
+            <h3>Uncontrolled onboarding flow</h3>
+            <UncontrolledOnboardingFlow onFinish={data => {
+                console.log(data);
+                alert('onboarding complete')
+            }}>
+                <StepOne />
+                <StepTwo />
+                <StepThree />
+                <StepFour />
+            </UncontrolledOnboardingFlow>
+            <br/>
+            <h3>Controlled onboarding flow</h3>
+            <ControlledOnboardingFlow step={step} nextStep={nextStep}  onFinish={(data) => {
+                console.log(data);
+                alert('onboarding complete')
+            }}>
+                <StepOne />
+                <StepTwo />
+                {onboardingData.age > 61 && <StepThree />}
+                <StepFour />
+            </ControlledOnboardingFlow>
         </>
+
 	);
 }
 
